@@ -1,33 +1,48 @@
 /* Based on Documentation/usbmon.txt in the Linux Kernel */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#include <inttypes.h>
+
+
+#include <sys/ioctl.h>
+#include <linux/ioctl.h>
+
+
+
 #ifndef _USBMON_H_
 #define _USBMON_H_
 
+
 struct usbmon_packet {
-	u64 id;			/* URB ID */
+	uint64_t id;			/* URB ID */
 	unsigned char type;	/* 'S'ubmit 'C'allback 'E'rror */
 	unsigned char xfer;	/* ISO=0 INT=1 CTRL=2 BULK=3 */
 	unsigned char epnum;
 	unsigned char devnum;
-	u16 busnum;
+	uint16_t busnum;
 	char flag_setup;
 	char flag_data;
-	s64 ts_sec;
-	s32 ts_usec;
-	int status;
-	unsigned int length;
-	unsigned int len_cap;
+	int64_t ts_sec;
+	int32_t ts_usec;
+	int32_t status;
+	uint32_t length;
+	uint32_t len_cap;
 	union {
 		unsigned char setup[8];
 		struct iso_rec {
-			int error_count;
-			int numdesc;
+			int32_t error_count;
+			int32_t numdesc;
 		} iso;
 	} s;
-	int interval;
-	int start_frame;
-	unsigned int xfer_flags;
-	unsigned int ndesc;
+	int32_t interval;
+	int32_t start_frame;
+	uint32_t xfer_flags;
+	uint32_t ndesc;
 };
 
 struct usbmon_get {

@@ -15,20 +15,6 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-
-#include <sys/ioctl.h>
-#include <linux/ioctl.h>
-
-typedef unsigned long long u64;
-typedef signed long long s64;
-typedef int s32;
-typedef unsigned short u16;
 
 #include "usbmon.h"
 
@@ -87,7 +73,7 @@ int main(int argc, char **argv)
 			continue;
 		if (busmask & (1 << hdr.busnum))
 			continue;
-		printf("%d.%03d.%03d %c %c%c %04x",
+		printf("%d.%03d.%03d %c %c%c ------%04x",
 			hdr.busnum, hdr.devnum, hdr.epnum & 0x7F,
 			hdr.type,
 			_xfer[hdr.xfer], (hdr.epnum & 0x80) ? 'i' : 'o',
@@ -134,7 +120,7 @@ int main(int argc, char **argv)
 dumpdata:
 		if (hdr.len_cap > sizeof(data))
 			hdr.len_cap = sizeof(data);
-		for (n = 0; n < hdr.len_cap; n++) 
+		for (n = 0; n < (int)hdr.len_cap; n++) 
 			printf((n & 3) ? " %02x" : " %02x",data[n]);
 		printf("\n");
 		fflush(stdout);
