@@ -1,7 +1,8 @@
 /* usbmon.c
  *
  * Copyright 2011 Brian Swetland <swetland@frotz.net>
- * 
+ * Copyright 2015 Radovan Sroka <rsroka@redhat.com> 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,9 +32,8 @@ int main(int argc, char **argv)
 
 	memset(filter_dev, 0, sizeof(filter_dev));
 
-	fd = open("/dev/usbmon0", O_RDONLY);
-	if (fd < 0) 
-		return -1;
+	if ((fd = open("/dev/usbmon0", O_RDONLY)) < 0)
+		return 1;
 
 	argc--;
 	argv++;
