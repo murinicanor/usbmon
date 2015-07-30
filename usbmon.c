@@ -16,12 +16,75 @@
  * limitations under the License.
  */
 
-
 #include "usbmon.h"
+#define MASK_SIZE 50
 
+
+struct Params{
+	int b;
+	int d;
+	int x;
+};
+
+struct Params params = {.b=0, .d=0, .x=0}; 
 static char _xfer[4] = "SICB";
 
-int main(int argc, char **argv) 
+int parse_parameters(int argc, const char **argv){
+
+
+	argv++;
+	argc--;	
+
+	char mask[MASK_SIZE] = {0};
+
+	if(argc > MASK_SIZE)return 1;
+
+	for(int i = 0 ; i < argc ; i++){
+		if(*argv[i] == '-'){
+			mask[i] = 1;
+			argv[i]++;
+		}
+	}
+
+	for(int i = 0 ; i < argc ; i++){
+		if(mask[i]){
+			int * pointer = NULL;
+
+			switch(*argv[i]){
+				case 'b':
+					pointer = &params.b;
+					break;
+				case 'd':
+					pointer = &params.d;
+					break;
+				case 'x':
+					pointer = &params.x;
+					break;
+				default:
+					continue;
+			}
+
+			if(!mask[i+1] && i+1 < argc){
+				char * ptr = NULL;
+				*pointer = (int)strtol(argv[i+1], &ptr, 10);
+				if(*ptr != '\0'){
+					fprintf(stderr, "%s %d\n", "Cannot parse argument number", i+1);
+					return 1;
+				}
+			}
+			else {
+				fprintf(stderr, "%s %d\n", "Cannot parse argument number", i+1);
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+
+}
+
+
+int main(int argc, const char **argv) 
 {
 	unsigned char data[4096];
 	struct usbmon_packet hdr;
@@ -32,35 +95,30 @@ int main(int argc, char **argv)
 
 	memset(filter_dev, 0, sizeof(filter_dev));
 
-	if ((fd = open("/dev/usbmon0", O_RDONLY)) < 0)
+	if ((fd = open("/dev/usbmon0", O_RDONLY)) < 0){
+		fprintf(stderr, "%s\n", "Cannot open /dev/usbmon0");
 		return 1;
-
-	argc--;
-	argv++;
-	while (argc--) {
-		if (argv[0][0] == '-') {
-			switch(argv[0][1]) {
-			case 'x': /* eXclude device */
-				r = atoi(argv[0] + 2);
-				if ((r < 0) || (r > 127))
-					continue;
-				filter_dev[r] = 1;
-				break;
-			case 'b': /* limit to Bus */
-				r = atoi(argv[0] + 2);
-				busmask = ~(1 << r);
-				break;
-			case 'd': /* limit to Device */
-				memset(filter_dev, 0x01, sizeof(filter_dev));
-				r = atoi(argv[0] + 2);
-				if ((r < 0) || (r > 127))
-					continue;
-				filter_dev[r] = 0;
-				break;
-			}
-		}
-		argv++;
 	}
+
+	if(parse_parameters(argc, argv))goto failure;
+
+	if(params.b)busmask = ~(1 << params.b);
+	
+	if(params.d > 0 && params.d < 127){
+		memset(filter_dev, 0x01, sizeof(filter_dev));
+		filter_dev[params.d] = 0;
+	}
+	else if(params.d){
+		fprintf(stderr, "%s\n", "Parameter is not in range 1 - 127");
+		goto failure;
+	}
+
+	if(params.x > 0 && params.x < 127)filter_dev[params.x] = 1;
+	else if(params.x){
+		fprintf(stderr, "%s\n", "Parameter is not in range 1 - 127");
+		goto failure;
+	}
+
 
 	arg.hdr = &hdr;
 	arg.data = data;
@@ -126,5 +184,8 @@ dumpdata:
 		fflush(stdout);
 	}
 	return 0;	
-}
 
+failure:
+	close(fd);
+	return 1;
+}
