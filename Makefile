@@ -1,9 +1,9 @@
 CFLAGS = -O2 -g -Wall -Wextra -pedantic
 CC = gcc
 
-default: usbmon clean
+default: usbmon-dump clean
 
-usbmon: usbmon.o
+usbmon-dump: usbmon-dump.o
 
 clean:
 	rm -f *.o

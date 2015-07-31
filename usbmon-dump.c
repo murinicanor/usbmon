@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "usbmon.h"
+#include "usbmon-dump.h"
 #define MASK_SIZE 50
 
 
