@@ -119,6 +119,7 @@ int main(int argc, const char **argv)
 		goto failure;
 	}
 
+	long long int data_size = 0;
 
 	arg.hdr = &hdr;
 	arg.data = data;
@@ -140,6 +141,7 @@ int main(int argc, const char **argv)
 			hdr.flag_data ? hdr.flag_data : ' ',
 #endif
 			hdr.length);
+		data_size += hdr.length;
 		if (hdr.type == 'S') {
 			if (hdr.xfer == 2) {
 				printf(" %02x %02x %02x%02x %02x%02x %02x%02x\n",
@@ -181,6 +183,7 @@ dumpdata:
 		for (n = 0; n < (int)hdr.len_cap; n++) 
 			printf((n & 3) ? " %02x" : " %02x",data[n]);
 		printf("\n");
+		printf("data_size_all=%lld\n", data_size);
 		fflush(stdout);
 	}
 	return 0;	
