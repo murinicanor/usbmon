@@ -42,7 +42,7 @@ struct usbmon_get {
 
 
 enum Direction{
-	IN, OUT
+	IN, OUT, BOTH
 };
 
 class UsbPacket{
