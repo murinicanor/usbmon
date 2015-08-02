@@ -48,7 +48,9 @@ enum Direction{
 class UsbPacket{
 
 public:
-	UsbPacket(usbmon_get * get);
+	UsbPacket();
+
+	int parseUsbPacket(usbmon_get * get);
 
 	char * getData();
 	size_t getDataBufferSize();

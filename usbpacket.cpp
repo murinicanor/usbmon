@@ -1,11 +1,17 @@
 #include "usbpacket.hpp"
 
+UsbPacket::UsbPacket(){
 
-UsbPacket::UsbPacket(usbmon_get * get){
+}
+
+int UsbPacket::parseUsbPacket(usbmon_get * get){
 	
+	if(get == NULL || get->hdr == NULL || get->data == NULL)return EXIT_FAILURE;
+
 	this->header = get->hdr;
 	this->data = (char *)get->data;
 	this->alloc = get->alloc;
+	return EXIT_SUCCESS;
 }
 
 char * UsbPacket::getData(){
