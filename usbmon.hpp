@@ -1,8 +1,12 @@
 #ifndef USBMON_HPP
 #define USBMON_HPP
 
+#include <iostream>
+#include <mutex>
+#include <map>
 #include <sys/ioctl.h>
 #include <linux/ioctl.h>
+#include "usbpacket.hpp"
 
 
 #define MON_IOC_MAGIC	0x92
@@ -15,6 +19,11 @@ class Usbmon
 public:
 	Usbmon();
 	~Usbmon();
+
+private:
+	std::mutex mtx;
+	std::map<int, long long int> stats;
+
 };
 
 #endif
