@@ -6,7 +6,10 @@ UsbPacket::UsbPacket(){
 
 int UsbPacket::parseUsbPacket(usbmon_get * get){
 	
-	if(get == NULL || get->hdr == NULL || get->data == NULL)return EXIT_FAILURE;
+	if(get == NULL || get->hdr == NULL || get->data == NULL){
+		std::cerr << "UsbPacket::parseUsbPacket(usbmon_get * get) parameter is null\n";
+		return EXIT_FAILURE;
+	}
 
 	this->header = get->hdr;
 	this->data = (char *)get->data;
