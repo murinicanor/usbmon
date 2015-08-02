@@ -2,8 +2,10 @@
 #define USBMON_HPP
 
 #include <iostream>
+#include <string>
 #include <mutex>
 #include <list>
+#include <memory>
 #include <sys/ioctl.h>
 #include <linux/ioctl.h>
 #include "usbpacket.hpp"
@@ -45,11 +47,23 @@ class Usbmon
 {
 public:
 	Usbmon();
+
+	int UsbmonInit(std::string usbmon_file_path);
+
+	int monitorLoop();
+
+	void setLoopState(bool state);
+	bool getLoopState();
 	~Usbmon();
 
 private:
 	std::mutex mtx;
-	std::list<Rule> rules;
+	std::list<std::shared_ptr<Rule>> * rules;
+
+	std::string usbmon_file_path;
+	int usbmon_fd;
+	bool loopstate;
+
 
 };
 

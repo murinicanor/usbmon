@@ -1,10 +1,55 @@
 #include "usbmon.hpp"
 #include <iostream>
+#include <cstdlib>
+#include <cstdio>
+#include <unistd.h>
+#include <fcntl.h>
 
 Usbmon::Usbmon () {
+	this->usbmon_fd = -1;
+	this->loopstate = false;
+}
+
+int Usbmon::UsbmonInit(std::string usbmon_file_path){
+	if((this->usbmon_fd = open(usbmon_file_path.c_str() , O_RDONLY)) < 0){
+		std::cerr << "Cannot open file " + usbmon_file_path + "\n";
+		return EXIT_FAILURE;
+	}
+
+	this->rules = new std::list<std::shared_ptr<Rule>>();
+
+	return EXIT_SUCCESS;
 }
 
 Usbmon::~Usbmon () {
+	if(this->usbmon_fd > 0)close(this->usbmon_fd);
+	delete rules;
+}
+
+int Usbmon::monitorLoop(){
+
+	this->setLoopState(true);
+
+	while(this->getLoopState()){
+		std::cout << "while cycle\n";
+		this->setLoopState(false);
+	}
+
+
+	return EXIT_SUCCESS;
+}
+
+void Usbmon::setLoopState(bool state){
+	this->mtx.lock();
+	this->loopstate = state;
+	this->mtx.unlock();
+}
+
+bool Usbmon::getLoopState(){
+	this->mtx.lock();
+	bool state = this->loopstate;
+	this->mtx.unlock();
+	return state;
 }
 
 Rule::Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
