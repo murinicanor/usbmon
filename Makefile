@@ -3,7 +3,7 @@ CPPFLAGS = -O2 -g -Wall -Wextra -pedantic -std=c++11
 CC = gcc
 CPP = g++
 
-default: usbmon-dump usbmon-api
+default: usbmon-dump usbmon-api usbpacket.o
 
 
 usbmon-dump: usbmon-dump.o
@@ -21,6 +21,9 @@ usbmon-api.o: usbmon-api.cpp usbmon.hpp
 
 usbmon.o: usbmon.cpp usbmon.hpp
 	$(CPP) $(CPPFLAGS) -c usbmon.cpp
+
+usbpacket.o: usbpacket.cpp usbpacket.hpp
+	$(CPP) $(CPPFLAGS) -c usbpacket.cpp
 
 
 clean:
