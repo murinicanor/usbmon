@@ -1,7 +1,7 @@
 #include "usbpacket.hpp"
 
 UsbPacket::UsbPacket(){
-
+	this->header = new usbmon_packet;
 }
 
 int UsbPacket::parseUsbPacket(usbmon_get * get){
@@ -11,8 +11,10 @@ int UsbPacket::parseUsbPacket(usbmon_get * get){
 		return EXIT_FAILURE;
 	}
 
-	this->header = get->hdr;
-	this->data = (char *)get->data;
+	this->data = new char[get->hdr->len_cap * 2];
+
+	memcpy(this->header, get->hdr, sizeof(usbmon_packet));
+	memcpy(this->data, get->data, get->hdr->len_cap * 2);
 	this->alloc = get->alloc;
 	return EXIT_SUCCESS;
 }
@@ -45,7 +47,13 @@ usbmon_packet * UsbPacket::getHeader(){
 	return this->header;
 }
 
+void UsbPacket::printUsbPacket(){
+	std::printf("%d.%03d.%03d %c %c ------%04x \n",
+			this->header->busnum, this->header->devnum, this->header->epnum & 0x7F,
+			this->header->type, (this->header->epnum & 0x80) ? 'i' : 'o',this->header->length);
+}
+
 UsbPacket::~UsbPacket(){
-	free(this->header);
-	free(this->data);
+	delete this->header;
+	delete this->data;
 }

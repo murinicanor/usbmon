@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cinttypes>
 #include <cstdlib>
+#include <cstring>
 
 
 struct usbmon_packet {
@@ -59,6 +60,8 @@ public:
 	uint16_t getBusNumber();
 	Direction getDirection();
 	usbmon_packet * getHeader();
+
+	void printUsbPacket();
 
 	~UsbPacket();
 
