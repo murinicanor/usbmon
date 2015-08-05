@@ -10,7 +10,6 @@
 #include <linux/ioctl.h>
 #include "usbpacket.hpp"
 
-
 #define MON_IOC_MAGIC	0x92
 #define MON_IOCX_GET	_IOW(MON_IOC_MAGIC, 6, struct usbmon_get)
 #define MON_IOCX_GETX	_IOW(MON_IOC_MAGIC, 10, struct usbmon_get)
@@ -54,6 +53,10 @@ public:
 
 	void setLoopState(bool state);
 	bool getLoopState();
+
+	void setFileDescriptor(int fd);
+	int getFileDescriptor();
+
 	~Usbmon();
 
 private:
@@ -63,7 +66,7 @@ private:
 	std::string usbmon_file_path;
 	int usbmon_fd;
 	bool loopstate;
-
+	
 
 };
 

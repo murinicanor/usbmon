@@ -1,9 +1,13 @@
 #include "usbmon.hpp"
+#include "usbpacket.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
 #include <fcntl.h>
+
+#define MAXDATASIZE 10000
+
 
 Usbmon::Usbmon () {
 	this->usbmon_fd = -1;
@@ -29,14 +33,42 @@ Usbmon::~Usbmon () {
 int Usbmon::monitorLoop(){
 
 	this->setLoopState(true);
+	usbmon_get arg;
+	usbmon_packet pkt;
+	char * data = new char[MAXDATASIZE];
+	arg.hdr = &pkt;
+	arg.data = data;
+
+	UsbPacket *packet = new UsbPacket();
 
 	while(this->getLoopState()){
-		std::cout << "while cycle\n";
-		this->setLoopState(false);
+
+
+		arg.alloc = sizeof(data);
+		if(ioctl(this->getFileDescriptor(), MON_IOCX_GET, &arg) < 0){
+			std::cerr << "ioctl failed\n";
+			goto failure;
+		}
+
+		if(packet->parseUsbPacket(&arg)){
+			std::cerr << "parseUsbPacket failed\n";
+			goto failure;
+		}
+
+		packet->printUsbPacket();
+
+		//std::cout << uintmax_t((uint32_t(0) - 1) * 2);
+		//this->setLoopState(false);
 	}
 
-
+	delete data;
+	delete packet;
 	return EXIT_SUCCESS;
+
+failure:
+	delete data;
+	delete packet;
+	return EXIT_FAILURE;
 }
 
 void Usbmon::setLoopState(bool state){
@@ -50,6 +82,19 @@ bool Usbmon::getLoopState(){
 	bool state = this->loopstate;
 	this->mtx.unlock();
 	return state;
+}
+
+void Usbmon::setFileDescriptor(int fd){
+	this->mtx.lock();
+	this->usbmon_fd;
+	this->mtx.unlock();
+}
+
+int Usbmon::getFileDescriptor(){
+	this->mtx.lock();
+	int fd = this->usbmon_fd;
+	this->mtx.unlock();
+	return fd;
 }
 
 Rule::Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
