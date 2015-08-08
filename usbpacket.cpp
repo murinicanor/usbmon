@@ -2,6 +2,7 @@
 
 UsbPacket::UsbPacket(){
 	this->header = new usbmon_packet;
+	this->data = NULL;
 }
 
 int UsbPacket::parseUsbPacket(usbmon_get * get){
@@ -11,10 +12,14 @@ int UsbPacket::parseUsbPacket(usbmon_get * get){
 		return EXIT_FAILURE;
 	}
 
-	this->data = new char[get->hdr->len_cap * 2];
+	if (get->hdr->flag_data != 60){
+		this->data = new char[get->hdr->len_cap * 2];
+		memcpy(this->data, get->data, get->hdr->len_cap * 2);
+	}
+
 
 	memcpy(this->header, get->hdr, sizeof(usbmon_packet));
-	memcpy(this->data, get->data, get->hdr->len_cap * 2);
+	
 	this->alloc = get->alloc;
 	return EXIT_SUCCESS;
 }
@@ -55,5 +60,5 @@ void UsbPacket::printUsbPacket(){
 
 UsbPacket::~UsbPacket(){
 	delete this->header;
-	delete this->data;
+	delete [] this->data;
 }

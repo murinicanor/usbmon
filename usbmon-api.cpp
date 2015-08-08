@@ -3,6 +3,7 @@
 #include <ctime>
 #include <unistd.h>
 
+#include "usbpacket.hpp"
 #include "usbmon.hpp"
 
 using namespace std;
@@ -16,6 +17,8 @@ int main(int argc, char const *argv[])
 	usbmon->UsbmonInit("/dev/usbmon0");
 
 	thread loop(&Usbmon::monitorLoop, usbmon);
+
+	//usbmon->addRule(1,1, OUT, 10);
 
 	sleep(5);
 	usbmon->setLoopState(false);

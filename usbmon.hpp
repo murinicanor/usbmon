@@ -19,12 +19,13 @@ class Rule
 public:
 	Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit);
 
+	uint64_t getID();
 	unsigned char getDeviceNumber();
 	uint16_t getBusNumber();
 	Direction getDirection();
 	uintmax_t getTransferedData();
 	intmax_t getDataTransferLimit();
-
+	
 	void setDeviceNumber(unsigned char num);
 	void setBusNumber(uint16_t num);
 	void setDirection(Direction direction);
@@ -33,6 +34,7 @@ public:
 	~Rule();
 
 private:
+	uint64_t id;
 	unsigned char devnum;
 	uint16_t busnum;
 	Direction direction;
@@ -57,6 +59,11 @@ public:
 	void setFileDescriptor(int fd);
 	int getFileDescriptor();
 
+	uint64_t addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit);
+	void removeRule(Rule rule);
+	void getRule(uint64_t rule_id);
+	void clearRules();
+
 	~Usbmon();
 
 private:
@@ -66,7 +73,7 @@ private:
 	std::string usbmon_file_path;
 	int usbmon_fd;
 	bool loopstate;
-	
+
 
 };
 

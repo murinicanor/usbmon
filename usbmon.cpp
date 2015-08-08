@@ -1,6 +1,7 @@
 #include "usbmon.hpp"
 #include "usbpacket.hpp"
 #include <iostream>
+#include <memory>
 #include <cstdlib>
 #include <cstdio>
 #include <unistd.h>
@@ -12,6 +13,7 @@
 Usbmon::Usbmon () {
 	this->usbmon_fd = -1;
 	this->loopstate = false;
+	this->rules = new std::list<std::shared_ptr<Rule>>();
 }
 
 int Usbmon::UsbmonInit(std::string usbmon_file_path){
@@ -19,8 +21,6 @@ int Usbmon::UsbmonInit(std::string usbmon_file_path){
 		std::cerr << "Cannot open file " + usbmon_file_path + "\n";
 		return EXIT_FAILURE;
 	}
-
-	this->rules = new std::list<std::shared_ptr<Rule>>();
 
 	return EXIT_SUCCESS;
 }
@@ -35,17 +35,22 @@ int Usbmon::monitorLoop(){
 	this->setLoopState(true);
 	usbmon_get arg;
 	usbmon_packet pkt;
-	char * data = new char[MAXDATASIZE];
-	arg.hdr = &pkt;
-	arg.data = data;
-
-	UsbPacket *packet = new UsbPacket();
+	char * data;
+	UsbPacket * packet;
 
 	while(this->getLoopState()){
 
+		memset(&arg, 0, sizeof(usbmon_get));
+		memset(&pkt, 0, sizeof(usbmon_packet));
 
-		arg.alloc = sizeof(data);
-		if(ioctl(this->getFileDescriptor(), MON_IOCX_GET, &arg) < 0){
+		packet = new UsbPacket();
+		data = new char[MAXDATASIZE];
+
+		arg.hdr = &pkt;
+		arg.data = data;		
+		arg.alloc = MAXDATASIZE;
+
+		if(ioctl(this->getFileDescriptor(), MON_IOCX_GET, &arg) == -1){
 			std::cerr << "ioctl failed\n";
 			goto failure;
 		}
@@ -57,16 +62,16 @@ int Usbmon::monitorLoop(){
 
 		packet->printUsbPacket();
 
-		//std::cout << uintmax_t((uint32_t(0) - 1) * 2);
-		//this->setLoopState(false);
+		delete [] data;
+		delete packet;
+		data = NULL;
+		packet = NULL;
 	}
 
-	delete data;
-	delete packet;
 	return EXIT_SUCCESS;
 
 failure:
-	delete data;
+	delete [] data;
 	delete packet;
 	return EXIT_FAILURE;
 }
@@ -86,7 +91,7 @@ bool Usbmon::getLoopState(){
 
 void Usbmon::setFileDescriptor(int fd){
 	this->mtx.lock();
-	this->usbmon_fd;
+	this->usbmon_fd = fd;
 	this->mtx.unlock();
 }
 
@@ -97,12 +102,38 @@ int Usbmon::getFileDescriptor(){
 	return fd;
 }
 
-Rule::Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
+
+uint64_t Usbmon::addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
+	std::shared_ptr<Rule> rule (new Rule(devnum, busnum, direction, data_limit));
+	std::cout << rule->getID() << std::endl;
+
+	return rule->getID();
+}
+
+void Usbmon::removeRule(Rule rule){
+
+}
+
+void Usbmon::getRule(uint64_t rule_id){
+
+}
+
+void Usbmon::clearRules(){
+
+}
+
+
+/*****************************************************************************/
+
+Rule::Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){	
 	this->devnum = devnum;
 	this->busnum = busnum;
 	this->direction = direction;
 	this->data_limit = data_limit;
 	this->transfered_data = 0;
+
+	this->id = reinterpret_cast<uint64_t>(this);
+
 }
 
 Rule::~Rule(){
@@ -143,4 +174,8 @@ void Rule::setDirection(Direction direction){
 
 void Rule::setDataTransferLimit(intmax_t limit){
 	this->data_limit = limit;
+}
+
+uint64_t Rule::getID(){
+	return this->id;
 }
