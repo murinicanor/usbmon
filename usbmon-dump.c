@@ -142,7 +142,7 @@ int main(int argc, const char **argv)
 #endif
 			hdr.length);
 
-		if (!(hdr.epnum & 0x80))data_size += hdr.len_cap;
+		if (hdr.flag_data != 60)data_size += hdr.len_cap;
 		
 		if (hdr.type == 'S') {
 			if (hdr.xfer == 2) {
