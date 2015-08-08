@@ -60,9 +60,11 @@ public:
 	int getFileDescriptor();
 
 	uint64_t addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit);
-	void removeRule(Rule rule);
+	void removeRule(uint64_t rule_id);
 	void getRule(uint64_t rule_id);
 	void clearRules();
+
+	int getNumOfRules();
 
 	~Usbmon();
 

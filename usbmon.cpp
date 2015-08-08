@@ -104,14 +104,22 @@ int Usbmon::getFileDescriptor(){
 
 
 uint64_t Usbmon::addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
-	std::shared_ptr<Rule> rule (new Rule(devnum, busnum, direction, data_limit));
-	std::cout << rule->getID() << std::endl;
-
-	return rule->getID();
+	this->mtx.lock();
+	this->rules->push_back(std::shared_ptr<Rule>(new Rule(devnum, busnum, direction, data_limit)));
+	uint64_t id = this->rules->back()->getID();
+	this->mtx.unlock();
+	return id;
 }
 
-void Usbmon::removeRule(Rule rule){
-
+void Usbmon::removeRule(uint64_t rule_id){
+	this->mtx.lock();
+	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
+		if(rule_id == it->get()->getID()){
+			this->rules->remove(*it);
+			break;
+		}
+	}
+	this->mtx.unlock();
 }
 
 void Usbmon::getRule(uint64_t rule_id){
@@ -120,6 +128,13 @@ void Usbmon::getRule(uint64_t rule_id){
 
 void Usbmon::clearRules(){
 
+}
+
+int Usbmon::getNumOfRules(){
+	this->mtx.lock();
+	int count = this->rules->size();
+	this->mtx.unlock();
+	return count;
 }
 
 

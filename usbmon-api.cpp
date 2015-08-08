@@ -18,7 +18,15 @@ int main(int argc, char const *argv[])
 
 	thread loop(&Usbmon::monitorLoop, usbmon);
 
-	//usbmon->addRule(1,1, OUT, 10);
+	uint64_t first = usbmon->addRule(1,1, OUT, 10);
+	uint64_t second = usbmon->addRule(1,1, OUT, 10);
+
+	std::cout << usbmon->getNumOfRules() << std::endl;
+
+	usbmon->removeRule(first);
+	usbmon->removeRule(second);
+
+	std::cout << usbmon->getNumOfRules() << std::endl;
 
 	sleep(5);
 	usbmon->setLoopState(false);
