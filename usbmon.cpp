@@ -61,6 +61,9 @@ int Usbmon::monitorLoop(){
 		}
 
 		packet->printUsbPacket();
+		this->applyRules(packet);
+		this->checkRules();
+		
 
 		delete [] data;
 		delete packet;
@@ -74,6 +77,32 @@ failure:
 	delete [] data;
 	delete packet;
 	return EXIT_FAILURE;
+}
+
+
+void Usbmon::applyRules(UsbPacket * packet){
+	
+	if(packet == NULL)return; 
+
+	this->mtx.lock();
+	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
+		if(it->get()->getBusNumber() != packet->getBusNumber())continue;
+		if(it->get()->getDeviceNumber() != packet->getDeviceNumber())continue;
+		if(it->get()->getDirection() != BOTH && it->get()->getDirection() != packet->getDirection())continue;
+		
+		it->get()->addTransferedData(packet->getDataLength());
+		std::cout << it->get()->getID() << " " << it->get()->getTransferedData() << std::endl;
+	}
+	this->mtx.unlock();
+}
+
+void Usbmon::checkRules(){
+	this->mtx.lock();
+	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
+		if(it->get()->getDataTransferLimit() >= 0 && it->get()->getTransferedData() > (uintmax_t)it->get()->getDataTransferLimit())
+			std::cerr << it->get()->getID() << " busnum=" << (int)it->get()->getBusNumber() << " devnum=" << (int)it->get()->getDeviceNumber() << " limit=" << it->get()->getDataTransferLimit() << " transfered_data=" <<it->get()->getTransferedData() << std::endl;
+	}
+	this->mtx.unlock();
 }
 
 void Usbmon::setLoopState(bool state){
@@ -103,31 +132,32 @@ int Usbmon::getFileDescriptor(){
 }
 
 
-uint64_t Usbmon::addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){
+uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit){
 	this->mtx.lock();
-	this->rules->push_back(std::shared_ptr<Rule>(new Rule(devnum, busnum, direction, data_limit)));
+	this->rules->push_back(std::shared_ptr<Rule>(new Rule(busnum, devnum, direction, data_limit)));
 	uint64_t id = this->rules->back()->getID();
 	this->mtx.unlock();
 	return id;
 }
 
-void Usbmon::removeRule(uint64_t rule_id){
-	this->mtx.lock();
-	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
-		if(rule_id == it->get()->getID()){
-			this->rules->remove(*it);
-			break;
-		}
-	}
-	this->mtx.unlock();
-}
-
-void Usbmon::getRule(uint64_t rule_id){
-
+int Usbmon::removeRule(uint64_t rule_id){
+	std::shared_ptr<Rule> * rule = NULL;
+	rule = this->getRule(rule_id);
+	
+	if(rule){
+		this->mtx.lock();
+		this->rules->remove(*rule);
+		this->mtx.unlock();
+	}	
+	
+	if(rule)return EXIT_SUCCESS;
+	else return EXIT_FAILURE;
 }
 
 void Usbmon::clearRules(){
-
+	this->mtx.lock();
+	this->rules->clear();
+	this->mtx.unlock();
 }
 
 int Usbmon::getNumOfRules(){
@@ -138,9 +168,22 @@ int Usbmon::getNumOfRules(){
 }
 
 
+std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){
+	std::shared_ptr<Rule> * rule = NULL;
+	this->mtx.lock();
+	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
+		if(rule_id == it->get()->getID()){
+			rule = &(*it);
+			break;
+		}
+	}
+	this->mtx.unlock();
+	return rule;
+}
+
 /*****************************************************************************/
 
-Rule::Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit){	
+Rule::Rule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit){	
 	this->devnum = devnum;
 	this->busnum = busnum;
 	this->direction = direction;
@@ -193,4 +236,8 @@ void Rule::setDataTransferLimit(intmax_t limit){
 
 uint64_t Rule::getID(){
 	return this->id;
+}
+
+void Rule::addTransferedData(uintmax_t add){
+	this->transfered_data += add;
 }

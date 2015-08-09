@@ -54,7 +54,7 @@ usbmon_packet * UsbPacket::getHeader(){
 
 void UsbPacket::printUsbPacket(){
 	std::printf("%d.%03d.%03d %c %c ------%04x \n",
-			this->header->busnum, this->header->devnum, this->header->epnum & 0x7F,
+			this->getBusNumber(), this->getDeviceNumber(), this->header->epnum & 0x7F,
 			this->header->type, (this->header->epnum & 0x80) ? 'i' : 'o',this->header->length);
 }
 

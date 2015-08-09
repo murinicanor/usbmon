@@ -17,7 +17,7 @@
 class Rule
 {
 public:
-	Rule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit);
+	Rule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit);
 
 	uint64_t getID();
 	unsigned char getDeviceNumber();
@@ -30,6 +30,8 @@ public:
 	void setBusNumber(uint16_t num);
 	void setDirection(Direction direction);
 	void setDataTransferLimit(intmax_t limit);
+
+	void addTransferedData(uintmax_t add);
 
 	~Rule();
 
@@ -59,10 +61,11 @@ public:
 	void setFileDescriptor(int fd);
 	int getFileDescriptor();
 
-	uint64_t addRule(unsigned char devnum, uint16_t busnum,	Direction direction, intmax_t data_limit);
-	void removeRule(uint64_t rule_id);
-	void getRule(uint64_t rule_id);
+	uint64_t addRule(uint16_t busnum, unsigned char devnum,	Direction direction, intmax_t data_limit);
+	int removeRule(uint64_t rule_id);
 	void clearRules();
+
+	int modifyRule(uint64_t rule_id);
 
 	int getNumOfRules();
 
@@ -76,7 +79,9 @@ private:
 	int usbmon_fd;
 	bool loopstate;
 
-
+	std::shared_ptr<Rule> * getRule(uint64_t rule_id);
+	void applyRules(UsbPacket * packet);
+	void checkRules();
 };
 
 #endif
