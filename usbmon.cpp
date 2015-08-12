@@ -80,11 +80,10 @@ failure:
 }
 
 
-void Usbmon::applyRules(UsbPacket * packet){
-	
+void Usbmon::applyRules(UsbPacket * packet){	
+	std::unique_lock<std::mutex> lck (this->mtx);
 	if(packet == NULL)return; 
 
-	this->mtx.lock();
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(it->get()->getBusNumber() != packet->getBusNumber())continue;
 		if(it->get()->getDeviceNumber() != packet->getDeviceNumber())continue;
@@ -93,50 +92,43 @@ void Usbmon::applyRules(UsbPacket * packet){
 		it->get()->addTransferedData(packet->getDataLength());
 		std::cout << it->get()->getID() << " " << it->get()->getTransferedData() << std::endl;
 	}
-	this->mtx.unlock();
 }
 
 void Usbmon::checkRules(){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(it->get()->getDataTransferLimit() >= 0 && it->get()->getTransferedData() > (uintmax_t)it->get()->getDataTransferLimit())
 			std::cerr << it->get()->getID() << " busnum=" << (int)it->get()->getBusNumber() << " devnum=" << (int)it->get()->getDeviceNumber() << " limit=" << it->get()->getDataTransferLimit() << " transfered_data=" <<it->get()->getTransferedData() << std::endl;
 	}
-	this->mtx.unlock();
 }
 
 void Usbmon::setLoopState(bool state){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->loopstate = state;
-	this->mtx.unlock();
 }
 
 bool Usbmon::getLoopState(){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	bool state = this->loopstate;
-	this->mtx.unlock();
 	return state;
 }
 
 void Usbmon::setFileDescriptor(int fd){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->usbmon_fd = fd;
-	this->mtx.unlock();
 }
 
 int Usbmon::getFileDescriptor(){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	int fd = this->usbmon_fd;
-	this->mtx.unlock();
 	return fd;
 }
 
 
 uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->rules->push_back(std::shared_ptr<Rule>(new Rule(busnum, devnum, direction, data_limit)));
 	uint64_t id = this->rules->back()->getID();
-	this->mtx.unlock();
 	return id;
 }
 
@@ -145,9 +137,8 @@ int Usbmon::removeRule(uint64_t rule_id){
 	rule = this->getRule(rule_id);
 	
 	if(rule){
-		this->mtx.lock();
+		std::unique_lock<std::mutex> lck (this->mtx);
 		this->rules->remove(*rule);
-		this->mtx.unlock();
 	}	
 	
 	if(rule)return EXIT_SUCCESS;
@@ -155,29 +146,26 @@ int Usbmon::removeRule(uint64_t rule_id){
 }
 
 void Usbmon::clearRules(){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->rules->clear();
-	this->mtx.unlock();
 }
 
 int Usbmon::getNumOfRules(){
-	this->mtx.lock();
+	std::unique_lock<std::mutex> lck (this->mtx);
 	int count = this->rules->size();
-	this->mtx.unlock();
 	return count;
 }
 
 
 std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	std::shared_ptr<Rule> * rule = NULL;
-	this->mtx.lock();
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(rule_id == it->get()->getID()){
 			rule = &(*it);
 			break;
 		}
 	}
-	this->mtx.unlock();
 	return rule;
 }
 
