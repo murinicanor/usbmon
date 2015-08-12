@@ -14,6 +14,7 @@ Usbmon::Usbmon () {
 	this->usbmon_fd = -1;
 	this->loopstate = false;
 	this->rules = new std::list<std::shared_ptr<Rule>>();
+	this->monitorThread = NULL;
 }
 
 int Usbmon::UsbmonInit(std::string usbmon_file_path){
@@ -26,11 +27,21 @@ int Usbmon::UsbmonInit(std::string usbmon_file_path){
 }
 
 Usbmon::~Usbmon () {
+	if(this->monitorThread != NULL)delete this->monitorThread;
 	if(this->usbmon_fd > 0)close(this->usbmon_fd);
 	delete rules;
 }
 
-int Usbmon::monitorLoop(){
+void Usbmon::monitorLoop(){
+	this->monitorThread = new std::thread(&Usbmon::loop, this);
+}
+
+void Usbmon::waitThread(){
+	if(this->monitorThread != NULL)
+		this->monitorThread->join();
+}
+
+int Usbmon::loop(){
 
 	this->setLoopState(true);
 	usbmon_get arg;
@@ -77,6 +88,8 @@ failure:
 	delete [] data;
 	delete packet;
 	return EXIT_FAILURE;
+
+
 }
 
 

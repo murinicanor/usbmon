@@ -6,6 +6,7 @@
 #include <mutex>
 #include <list>
 #include <memory>
+#include <thread>
 #include <sys/ioctl.h>
 #include <linux/ioctl.h>
 #include "usbpacket.hpp"
@@ -53,7 +54,8 @@ public:
 
 	int UsbmonInit(std::string usbmon_file_path);
 
-	int monitorLoop();
+	void monitorLoop();
+	void waitThread();
 
 	void setLoopState(bool state);
 	bool getLoopState();
@@ -73,6 +75,7 @@ public:
 
 private:
 	std::mutex mtx;
+	std::thread *monitorThread;
 	std::list<std::shared_ptr<Rule>> * rules;
 
 	std::string usbmon_file_path;
@@ -82,6 +85,7 @@ private:
 	std::shared_ptr<Rule> * getRule(uint64_t rule_id);
 	void applyRules(UsbPacket * packet);
 	void checkRules();
+	int loop();
 };
 
 #endif
