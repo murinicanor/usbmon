@@ -25,8 +25,11 @@ int main(int argc, char const *argv[])
 
 	std::cout << usbmon->getNumOfRules() << std::endl;
 
-	sleep(5);
-	usbmon->setLoopState(false);
+	char c = ' ';
+	while(c != 'q'){
+		std::cin >> c;
+		usbmon->setLoopState(false);
+	}
 
 	usbmon->waitThread();
 

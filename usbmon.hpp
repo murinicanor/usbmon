@@ -16,6 +16,7 @@ namespace usbmonitor{
 #define MON_IOC_MAGIC	0x92
 #define MON_IOCX_GET	_IOW(MON_IOC_MAGIC, 6,  usbpacket::usbmon_get)
 #define MON_IOCX_GETX	_IOW(MON_IOC_MAGIC, 10, usbpacket::usbmon_get)
+#define MON_IOCG_STATS  _IOR(MON_IOC_MAGIC, 3, usbpacket::mon_bin_stats)
 
 class Rule
 {

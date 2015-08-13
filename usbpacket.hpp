@@ -42,6 +42,10 @@ struct usbmon_get {
 	size_t alloc;
 };
 
+struct mon_bin_stats {
+	uint32_t queued;
+	uint32_t dropped;
+};
 
 enum Direction{
 	IN, OUT, BOTH

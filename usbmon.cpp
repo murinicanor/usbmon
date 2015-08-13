@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #define MAXDATASIZE 10000
+#define SLEEPTIME 1000
 
 using namespace usbmonitor;
 
@@ -47,13 +48,17 @@ int Usbmon::loop(){
 	this->setLoopState(true);
 	usbpacket::usbmon_get arg;
 	usbpacket::usbmon_packet pkt;
+	usbpacket::mon_bin_stats stats;
 	char * data;
 	usbpacket::UsbPacket * packet;
+
+
 
 	while(this->getLoopState()){
 
 		memset(&arg, 0, sizeof(usbpacket::usbmon_get));
 		memset(&pkt, 0, sizeof(usbpacket::usbmon_packet));
+		memset(&stats, 0, sizeof(usbpacket::mon_bin_stats));
 
 		packet = new usbpacket::UsbPacket();
 		data = new char[MAXDATASIZE];
@@ -62,7 +67,20 @@ int Usbmon::loop(){
 		arg.data = data;		
 		arg.alloc = MAXDATASIZE;
 
-		if(ioctl(this->getFileDescriptor(), MON_IOCX_GET, &arg) == -1){
+	noevent:
+		if(!this->getLoopState())goto clean;
+
+		if(ioctl(this->getFileDescriptor(), MON_IOCG_STATS, &stats) == -1){
+			std::cerr << "ioctl failed\n";
+			goto failure;
+		}
+		
+		if(stats.queued <= 0){
+			usleep(SLEEPTIME);
+			goto noevent;
+		}
+
+		if(ioctl(this->getFileDescriptor(), MON_IOCX_GETX, &arg) == -1){
 			std::cerr << "ioctl failed\n";
 			goto failure;
 		}
@@ -76,7 +94,7 @@ int Usbmon::loop(){
 		this->applyRules(packet);
 		this->checkRules();
 		
-
+	clean:
 		delete [] data;
 		delete packet;
 		data = NULL;
