@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 
+namespace usbpacket{
 
 struct usbmon_packet {
 	uint64_t id;			/* URB ID */
@@ -72,5 +73,6 @@ private:
 	
 };
 
+}
 
 #endif

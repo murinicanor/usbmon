@@ -11,25 +11,27 @@
 #include <linux/ioctl.h>
 #include "usbpacket.hpp"
 
+namespace usbmonitor{
+
 #define MON_IOC_MAGIC	0x92
-#define MON_IOCX_GET	_IOW(MON_IOC_MAGIC, 6, struct usbmon_get)
-#define MON_IOCX_GETX	_IOW(MON_IOC_MAGIC, 10, struct usbmon_get)
+#define MON_IOCX_GET	_IOW(MON_IOC_MAGIC, 6,  usbpacket::usbmon_get)
+#define MON_IOCX_GETX	_IOW(MON_IOC_MAGIC, 10, usbpacket::usbmon_get)
 
 class Rule
 {
 public:
-	Rule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit);
+	Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit);
 
 	uint64_t getID();
 	unsigned char getDeviceNumber();
 	uint16_t getBusNumber();
-	Direction getDirection();
+	usbpacket::Direction getDirection();
 	uintmax_t getTransferedData();
 	intmax_t getDataTransferLimit();
 	
 	void setDeviceNumber(unsigned char num);
 	void setBusNumber(uint16_t num);
-	void setDirection(Direction direction);
+	void setDirection(usbpacket::Direction direction);
 	void setDataTransferLimit(intmax_t limit);
 
 	void addTransferedData(uintmax_t add);
@@ -40,7 +42,7 @@ private:
 	uint64_t id;
 	unsigned char devnum;
 	uint16_t busnum;
-	Direction direction;
+	usbpacket::Direction direction;
 	uintmax_t transfered_data;
 	intmax_t data_limit;
 	
@@ -63,7 +65,7 @@ public:
 	void setFileDescriptor(int fd);
 	int getFileDescriptor();
 
-	uint64_t addRule(uint16_t busnum, unsigned char devnum,	Direction direction, intmax_t data_limit);
+	uint64_t addRule(uint16_t busnum, unsigned char devnum,	usbpacket::Direction direction, intmax_t data_limit);
 	int removeRule(uint64_t rule_id);
 	void clearRules();
 
@@ -83,9 +85,11 @@ private:
 	bool loopstate;
 
 	std::shared_ptr<Rule> * getRule(uint64_t rule_id);
-	void applyRules(UsbPacket * packet);
+	void applyRules(usbpacket::UsbPacket * packet);
 	void checkRules();
 	int loop();
 };
+
+}
 
 #endif

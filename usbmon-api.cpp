@@ -6,17 +6,17 @@
 #include "usbmon.hpp"
 
 using namespace std;
-Usbmon * usbmon;
+
 
 int main(int argc, char const *argv[])
 {
-	
-	usbmon = new Usbmon();
+	usbmonitor::Usbmon * usbmon;
+	usbmon = new usbmonitor::Usbmon();
 	usbmon->UsbmonInit("/dev/usbmon0");
 	usbmon->monitorLoop();
 
-	uint64_t first = usbmon->addRule(1,8, BOTH, 500);
-	uint64_t second = usbmon->addRule(1,9, IN, 1000);
+	uint64_t first = usbmon->addRule(1,8, usbpacket::BOTH, 500);
+	uint64_t second = usbmon->addRule(1,9, usbpacket::IN, 1000);
 
 	std::cout << usbmon->getNumOfRules() << std::endl;
 

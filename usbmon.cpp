@@ -9,6 +9,7 @@
 
 #define MAXDATASIZE 10000
 
+using namespace usbmonitor;
 
 Usbmon::Usbmon () {
 	this->usbmon_fd = -1;
@@ -44,17 +45,17 @@ void Usbmon::waitThread(){
 int Usbmon::loop(){
 
 	this->setLoopState(true);
-	usbmon_get arg;
-	usbmon_packet pkt;
+	usbpacket::usbmon_get arg;
+	usbpacket::usbmon_packet pkt;
 	char * data;
-	UsbPacket * packet;
+	usbpacket::UsbPacket * packet;
 
 	while(this->getLoopState()){
 
-		memset(&arg, 0, sizeof(usbmon_get));
-		memset(&pkt, 0, sizeof(usbmon_packet));
+		memset(&arg, 0, sizeof(usbpacket::usbmon_get));
+		memset(&pkt, 0, sizeof(usbpacket::usbmon_packet));
 
-		packet = new UsbPacket();
+		packet = new usbpacket::UsbPacket();
 		data = new char[MAXDATASIZE];
 
 		arg.hdr = &pkt;
@@ -93,14 +94,14 @@ failure:
 }
 
 
-void Usbmon::applyRules(UsbPacket * packet){	
+void Usbmon::applyRules(usbpacket::UsbPacket * packet){	
 	std::unique_lock<std::mutex> lck (this->mtx);
 	if(packet == NULL)return; 
 
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(it->get()->getBusNumber() != packet->getBusNumber())continue;
 		if(it->get()->getDeviceNumber() != packet->getDeviceNumber())continue;
-		if(it->get()->getDirection() != BOTH && it->get()->getDirection() != packet->getDirection())continue;
+		if(it->get()->getDirection() != usbpacket::BOTH && it->get()->getDirection() != packet->getDirection())continue;
 		
 		it->get()->addTransferedData(packet->getDataLength());
 		std::cout << it->get()->getID() << " " << it->get()->getTransferedData() << std::endl;
@@ -138,7 +139,7 @@ int Usbmon::getFileDescriptor(){
 }
 
 
-uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit){
+uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit){
 	std::unique_lock<std::mutex> lck (this->mtx);
 	this->rules->push_back(std::shared_ptr<Rule>(new Rule(busnum, devnum, direction, data_limit)));
 	uint64_t id = this->rules->back()->getID();
@@ -184,7 +185,7 @@ std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){
 
 /*****************************************************************************/
 
-Rule::Rule(uint16_t busnum, unsigned char devnum, Direction direction, intmax_t data_limit){	
+Rule::Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit){	
 	this->devnum = devnum;
 	this->busnum = busnum;
 	this->direction = direction;
@@ -207,7 +208,7 @@ uint16_t Rule::getBusNumber(){
 	return this->busnum;
 }
 
-Direction Rule::getDirection(){
+usbpacket::Direction Rule::getDirection(){
 	return this->direction;
 }
 
@@ -227,7 +228,7 @@ void Rule::setBusNumber(uint16_t num){
 	this->busnum = num;
 }
 
-void Rule::setDirection(Direction direction){
+void Rule::setDirection(usbpacket::Direction direction){
 	this->direction = direction;
 }
 

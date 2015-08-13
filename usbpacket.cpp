@@ -1,5 +1,7 @@
 #include "usbpacket.hpp"
 
+using namespace usbpacket;
+
 UsbPacket::UsbPacket(){
 	this->header = new usbmon_packet;
 	this->data = NULL;
