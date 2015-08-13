@@ -69,7 +69,10 @@ public:
 	int removeRule(uint64_t rule_id);
 	void clearRules();
 
-	int modifyRule(uint64_t rule_id);
+	int modifyRuleBusnum(uint64_t rule_id, uint16_t busnum);
+	int modifyRuleDevnum(uint64_t rule_id, unsigned char devnum);
+	int modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction);
+	int modifyRuleDataLimit(uint64_t rule_id, intmax_t data_limit);
 
 	int getNumOfRules();
 

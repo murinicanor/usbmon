@@ -147,15 +147,62 @@ uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, usbpacket::Direc
 }
 
 int Usbmon::removeRule(uint64_t rule_id){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	std::shared_ptr<Rule> * rule = NULL;
 	rule = this->getRule(rule_id);
 	
-	if(rule){
-		std::unique_lock<std::mutex> lck (this->mtx);
+	if(rule != NULL){		
 		this->rules->remove(*rule);
-	}	
-	
-	if(rule)return EXIT_SUCCESS;
+		return EXIT_SUCCESS;
+	}
+	else return EXIT_FAILURE;
+}
+
+int Usbmon::modifyRuleBusnum(uint64_t rule_id, uint16_t busnum){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	std::shared_ptr<Rule> * rule = NULL;
+	rule = this->getRule(rule_id);
+
+	if(rule != NULL){		
+		rule->get()->setBusNumber(busnum);
+		return EXIT_SUCCESS;
+	}
+	else return EXIT_FAILURE;
+}
+
+int Usbmon::modifyRuleDevnum(uint64_t rule_id, unsigned char devnum){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	std::shared_ptr<Rule> * rule = NULL;
+	rule = this->getRule(rule_id);
+
+	if(rule != NULL){		
+		rule->get()->setDeviceNumber(devnum);
+		return EXIT_SUCCESS;
+	}
+	else return EXIT_FAILURE;
+}
+
+int Usbmon::modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	std::shared_ptr<Rule> * rule = NULL;
+	rule = this->getRule(rule_id);
+
+	if(rule != NULL){		
+		rule->get()->setDirection(direction);
+		return EXIT_SUCCESS;
+	}
+	else return EXIT_FAILURE;
+}
+
+int Usbmon::modifyRuleDataLimit(uint64_t rule_id, intmax_t data_limit){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	std::shared_ptr<Rule> * rule = NULL;
+	rule = this->getRule(rule_id);
+
+	if(rule != NULL){		
+		rule->get()->setDataTransferLimit(data_limit);
+		return EXIT_SUCCESS;
+	}
 	else return EXIT_FAILURE;
 }
 
@@ -171,8 +218,7 @@ int Usbmon::getNumOfRules(){
 }
 
 
-std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){
-	std::unique_lock<std::mutex> lck (this->mtx);
+std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){       //use this function only inside mutex locked block (this->mtx)
 	std::shared_ptr<Rule> * rule = NULL;
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(rule_id == it->get()->getID()){
