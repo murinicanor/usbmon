@@ -49,26 +49,22 @@ int Usbmon::loop(){
 	usbpacket::usbmon_get arg;
 	usbpacket::usbmon_packet pkt;
 	usbpacket::mon_bin_stats stats;
-	char * data;
-	usbpacket::UsbPacket * packet;
-
-
+	
 
 	while(this->getLoopState()){
 
+		usbpacket::UsbPacket packet;
+		char data[MAXDATASIZE];
 		memset(&arg, 0, sizeof(usbpacket::usbmon_get));
 		memset(&pkt, 0, sizeof(usbpacket::usbmon_packet));
 		memset(&stats, 0, sizeof(usbpacket::mon_bin_stats));
-
-		packet = new usbpacket::UsbPacket();
-		data = new char[MAXDATASIZE];
 
 		arg.hdr = &pkt;
 		arg.data = data;		
 		arg.alloc = MAXDATASIZE;
 
 	noevent:
-		if(!this->getLoopState())goto clean;
+		if(!this->getLoopState())continue;
 
 		if(ioctl(this->getFileDescriptor(), MON_IOCG_STATS, &stats) == -1){
 			std::cerr << "ioctl failed\n";
@@ -85,27 +81,19 @@ int Usbmon::loop(){
 			goto failure;
 		}
 
-		if(packet->parseUsbPacket(&arg)){
+		if(packet.parseUsbPacket(&arg)){
 			std::cerr << "parseUsbPacket failed\n";
 			goto failure;
 		}
 
-		packet->printUsbPacket();
-		this->applyRules(packet);
+		packet.printUsbPacket();
+		this->applyRules(&packet);
 		this->checkRules();
-		
-	clean:
-		delete [] data;
-		delete packet;
-		data = NULL;
-		packet = NULL;
 	}
 
 	return EXIT_SUCCESS;
 
 failure:
-	delete [] data;
-	delete packet;
 	return EXIT_FAILURE;
 
 
