@@ -132,7 +132,7 @@ int main(int argc, const char **argv)
 			continue;
 		if (busmask & (1 << hdr.busnum))
 			continue;
-		printf("%d.%03d.%03d %c %c%c ------%04x",
+		printf("\n%d.%03d.%03d %c %c%c ------%04x",
 			hdr.busnum, hdr.devnum, hdr.epnum & 0x7F,
 			hdr.type,
 			_xfer[hdr.xfer], (hdr.epnum & 0x80) ? 'i' : 'o',

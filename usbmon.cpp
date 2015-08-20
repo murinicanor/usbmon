@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define MAXDATASIZE 10000
-#define SLEEPTIME 1000
+#define SLEEPTIME 10
+#define WORDSIZE 2
 
 using namespace usbmonitor;
 
@@ -49,22 +49,10 @@ int Usbmon::loop(){
 	usbpacket::usbmon_get arg;
 	usbpacket::usbmon_packet pkt;
 	usbpacket::mon_bin_stats stats;
-	
+	char data[BUFFERSIZE];
 
-	while(this->getLoopState()){
-
-		usbpacket::UsbPacket packet;
-		char data[MAXDATASIZE];
-		memset(&arg, 0, sizeof(usbpacket::usbmon_get));
-		memset(&pkt, 0, sizeof(usbpacket::usbmon_packet));
+	while(this->getLoopState()){	
 		memset(&stats, 0, sizeof(usbpacket::mon_bin_stats));
-
-		arg.hdr = &pkt;
-		arg.data = data;		
-		arg.alloc = MAXDATASIZE;
-
-	noevent:
-		if(!this->getLoopState())continue;
 
 		if(ioctl(this->getFileDescriptor(), MON_IOCG_STATS, &stats) == -1){
 			std::cerr << "ioctl failed\n";
@@ -73,8 +61,16 @@ int Usbmon::loop(){
 		
 		if(stats.queued <= 0){
 			usleep(SLEEPTIME);
-			goto noevent;
+			continue;
 		}
+
+		usbpacket::UsbPacket packet;
+		memset(&arg, 0, sizeof(usbpacket::usbmon_get));
+		memset(&pkt, 0, sizeof(usbpacket::usbmon_packet));
+
+		arg.hdr = &pkt;
+		arg.data = data;		
+		arg.alloc = BUFFERSIZE;
 
 		if(ioctl(this->getFileDescriptor(), MON_IOCX_GETX, &arg) == -1){
 			std::cerr << "ioctl failed\n";
@@ -90,7 +86,6 @@ int Usbmon::loop(){
 		this->applyRules(&packet);
 		this->checkRules();
 	}
-
 	return EXIT_SUCCESS;
 
 failure:
@@ -109,7 +104,7 @@ void Usbmon::applyRules(usbpacket::UsbPacket * packet){
 		if(it->get()->getDeviceNumber() != packet->getDeviceNumber())continue;
 		if(it->get()->getDirection() != usbpacket::BOTH && it->get()->getDirection() != packet->getDirection())continue;
 		
-		it->get()->addTransferedData(packet->getDataLength());
+		it->get()->addTransferedData(packet->getDataLength() * WORDSIZE);
 		std::cout << it->get()->getID() << " " << it->get()->getTransferedData() << std::endl;
 	}
 }
@@ -117,7 +112,7 @@ void Usbmon::applyRules(usbpacket::UsbPacket * packet){
 void Usbmon::checkRules(){
 	std::unique_lock<std::mutex> lck (this->mtx);
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
-		if(it->get()->getDataTransferLimit() >= 0 && it->get()->getTransferedData() > (uintmax_t)it->get()->getDataTransferLimit())
+		if(it->get()->getDataTransferLimit() > 0 && it->get()->getTransferedData() > (uintmax_t)it->get()->getDataTransferLimit())
 			std::cerr << it->get()->getID() << " busnum=" << (int)it->get()->getBusNumber() << " devnum=" << (int)it->get()->getDeviceNumber() << " limit=" << it->get()->getDataTransferLimit() << " transfered_data=" <<it->get()->getTransferedData() << std::endl;
 	}
 }
@@ -145,7 +140,7 @@ int Usbmon::getFileDescriptor(){
 }
 
 
-uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit){
+uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, uint64_t data_limit){
 	std::unique_lock<std::mutex> lck (this->mtx);
 	this->rules->push_back(std::shared_ptr<Rule>(new Rule(busnum, devnum, direction, data_limit)));
 	uint64_t id = this->rules->back()->getID();
@@ -200,7 +195,7 @@ int Usbmon::modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction
 	else return EXIT_FAILURE;
 }
 
-int Usbmon::modifyRuleDataLimit(uint64_t rule_id, intmax_t data_limit){
+int Usbmon::modifyRuleDataLimit(uint64_t rule_id, uint64_t data_limit){
 	std::unique_lock<std::mutex> lck (this->mtx);
 	std::shared_ptr<Rule> * rule = NULL;
 	rule = this->getRule(rule_id);
@@ -237,7 +232,7 @@ std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){       //use this func
 
 /*****************************************************************************/
 
-Rule::Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit){	
+Rule::Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, uint64_t data_limit){	
 	this->devnum = devnum;
 	this->busnum = busnum;
 	this->direction = direction;
@@ -264,11 +259,11 @@ usbpacket::Direction Rule::getDirection(){
 	return this->direction;
 }
 
-uintmax_t Rule::getTransferedData(){
-	return this->transfered_data * 2;
+uint64_t Rule::getTransferedData(){
+	return this->transfered_data;
 }
 
-intmax_t Rule::getDataTransferLimit(){
+uint64_t Rule::getDataTransferLimit(){
 	return this->data_limit;
 }
 
@@ -284,7 +279,7 @@ void Rule::setDirection(usbpacket::Direction direction){
 	this->direction = direction;
 }
 
-void Rule::setDataTransferLimit(intmax_t limit){
+void Rule::setDataTransferLimit(uint64_t limit){
 	this->data_limit = limit;
 }
 
@@ -292,6 +287,6 @@ uint64_t Rule::getID(){
 	return this->id;
 }
 
-void Rule::addTransferedData(uintmax_t add){
+void Rule::addTransferedData(uint64_t add){
 	this->transfered_data += add;
 }

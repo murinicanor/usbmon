@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#define BUFFERSIZE 4096
+
 namespace usbpacket{
 
 struct usbmon_packet {

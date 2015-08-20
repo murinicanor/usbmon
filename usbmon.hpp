@@ -13,29 +13,28 @@
 
 namespace usbmonitor{
 
-#define MON_IOC_MAGIC	0x92
-#define MON_IOCX_GET	_IOW(MON_IOC_MAGIC, 6,  usbpacket::usbmon_get)
-#define MON_IOCX_GETX	_IOW(MON_IOC_MAGIC, 10, usbpacket::usbmon_get)
-#define MON_IOCG_STATS  _IOR(MON_IOC_MAGIC, 3, usbpacket::mon_bin_stats)
+#define MON_IOC_MAGIC	 0x92
+#define MON_IOCX_GETX	 _IOW(MON_IOC_MAGIC, 10, usbpacket::usbmon_get)
+#define MON_IOCG_STATS   _IOR(MON_IOC_MAGIC, 3, usbpacket::mon_bin_stats)
 
 class Rule
 {
 public:
-	Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, intmax_t data_limit);
+	Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, uint64_t data_limit);
 
 	uint64_t getID();
 	unsigned char getDeviceNumber();
 	uint16_t getBusNumber();
 	usbpacket::Direction getDirection();
-	uintmax_t getTransferedData();
-	intmax_t getDataTransferLimit();
+	uint64_t getTransferedData();
+	uint64_t getDataTransferLimit();
 	
 	void setDeviceNumber(unsigned char num);
 	void setBusNumber(uint16_t num);
 	void setDirection(usbpacket::Direction direction);
-	void setDataTransferLimit(intmax_t limit);
+	void setDataTransferLimit(uint64_t limit);
 
-	void addTransferedData(uintmax_t add);
+	void addTransferedData(uint64_t add);
 
 	~Rule();
 
@@ -44,8 +43,8 @@ private:
 	unsigned char devnum;
 	uint16_t busnum;
 	usbpacket::Direction direction;
-	uintmax_t transfered_data;
-	intmax_t data_limit;
+	uint64_t transfered_data;
+	uint64_t data_limit;
 	
 };
 
@@ -66,14 +65,14 @@ public:
 	void setFileDescriptor(int fd);
 	int getFileDescriptor();
 
-	uint64_t addRule(uint16_t busnum, unsigned char devnum,	usbpacket::Direction direction, intmax_t data_limit);
+	uint64_t addRule(uint16_t busnum, unsigned char devnum,	usbpacket::Direction direction, uint64_t data_limit);
 	int removeRule(uint64_t rule_id);
 	void clearRules();
 
 	int modifyRuleBusnum(uint64_t rule_id, uint16_t busnum);
 	int modifyRuleDevnum(uint64_t rule_id, unsigned char devnum);
 	int modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction);
-	int modifyRuleDataLimit(uint64_t rule_id, intmax_t data_limit);
+	int modifyRuleDataLimit(uint64_t rule_id, uint64_t data_limit);
 
 	int getNumOfRules();
 

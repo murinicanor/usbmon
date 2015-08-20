@@ -1,9 +1,11 @@
 #include "usbpacket.hpp"
 
+#define DIRECTION_MASK 0x80
+
 using namespace usbpacket;
 
 UsbPacket::UsbPacket(){
-	this->header = new usbmon_packet;
+	this->header = NULL;
 	this->data = NULL;
 }
 
@@ -14,16 +16,15 @@ int UsbPacket::parseUsbPacket(usbmon_get * get){
 		return EXIT_FAILURE;
 	}
 
-	if (get->hdr->flag_data != 60){
-		this->data = new char[get->hdr->len_cap * 2];
-		memcpy(this->data, get->data, get->hdr->len_cap * 2);
-	}
-
-
-	memcpy(this->header, get->hdr, sizeof(usbmon_packet));
-	
+	this->data = (char *)get->data;
+	this->header = get->hdr;	
 	this->alloc = get->alloc;
+
 	return EXIT_SUCCESS;
+}
+
+char UsbPacket::getFlagData(){
+	return this->header->flag_data;
 }
 
 char * UsbPacket::getData(){
@@ -47,7 +48,7 @@ uint16_t UsbPacket::getBusNumber(){
 }
 
 Direction UsbPacket::getDirection(){
-	return (this->header->epnum & 0x80) ? IN : OUT;
+	return (this->header->epnum & DIRECTION_MASK) ? IN : OUT;
 }
 
 usbmon_packet * UsbPacket::getHeader(){
@@ -55,12 +56,11 @@ usbmon_packet * UsbPacket::getHeader(){
 }
 
 void UsbPacket::printUsbPacket(){
-	std::printf("%d.%03d.%03d %c %c ------%04x \n",
-			this->getBusNumber(), this->getDeviceNumber(), this->header->epnum & 0x7F,
-			this->header->type, (this->header->epnum & 0x80) ? 'i' : 'o',this->header->length);
+	std::printf("%d.%03d %c %c ------%04x \n",
+			this->getBusNumber(), this->getDeviceNumber(), this->header->type, 
+			this->getDirection() == usbpacket::IN ? 'i' : 'o', this->getDataLength());
 }
 
 UsbPacket::~UsbPacket(){
-	delete this->header;
-	delete [] this->data;
+
 }
