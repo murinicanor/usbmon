@@ -23,10 +23,6 @@ int UsbPacket::parseUsbPacket(usbmon_get * get){
 	return EXIT_SUCCESS;
 }
 
-char UsbPacket::getFlagData(){
-	return this->header->flag_data;
-}
-
 char * UsbPacket::getData(){
 	return this->data;
 }
