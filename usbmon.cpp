@@ -12,11 +12,13 @@
 
 using namespace usbmonitor;
 
-Usbmon::Usbmon () {
+Usbmon::Usbmon (void (*callback)(CallBackMessage, std::shared_ptr<usbmonitor::Rule>)) {
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->usbmon_fd = -1;
 	this->loopstate = false;
 	this->rules = new std::list<std::shared_ptr<Rule>>();
 	this->monitorThread = NULL;
+	this->callback = callback;
 }
 
 int Usbmon::UsbmonInit(std::string usbmon_file_path){
@@ -82,13 +84,14 @@ int Usbmon::loop(){
 			goto failure;
 		}
 
-		packet.printUsbPacket();
+		//packet.printUsbPacket();
 		this->applyRules(&packet);
 		this->checkRules();
 	}
 	return EXIT_SUCCESS;
 
 failure:
+	this->callback(THREAD_FAILS, NULL);
 	return EXIT_FAILURE;
 
 
@@ -105,15 +108,14 @@ void Usbmon::applyRules(usbpacket::UsbPacket * packet){
 		if(it->get()->getDirection() != usbpacket::BOTH && it->get()->getDirection() != packet->getDirection())continue;
 		
 		it->get()->addTransferedData(packet->getDataLength() * WORDSIZE);
-		std::cout << it->get()->getID() << " " << it->get()->getTransferedData() << std::endl;
 	}
 }
 
 void Usbmon::checkRules(){
 	std::unique_lock<std::mutex> lck (this->mtx);
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
-		if(it->get()->getDataTransferLimit() > 0 && it->get()->getTransferedData() > (uintmax_t)it->get()->getDataTransferLimit())
-			std::cerr << it->get()->getID() << " busnum=" << (int)it->get()->getBusNumber() << " devnum=" << (int)it->get()->getDeviceNumber() << " limit=" << it->get()->getDataTransferLimit() << " transfered_data=" <<it->get()->getTransferedData() << std::endl;
+		if(it->get()->getDataTransferLimit() > 0 && it->get()->getTransferedData() > it->get()->getDataTransferLimit())
+			this->callback(BROKEN_RULE, *it);
 	}
 }
 
@@ -233,13 +235,14 @@ std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){       //use this func
 /*****************************************************************************/
 
 Rule::Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, uint64_t data_limit){	
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->devnum = devnum;
 	this->busnum = busnum;
 	this->direction = direction;
 	this->data_limit = data_limit;
 	this->transfered_data = 0;
 
-	this->id = reinterpret_cast<uint64_t>(this);
+	this->id = generateNewId();
 
 }
 
@@ -247,46 +250,68 @@ Rule::~Rule(){
 
 }
 
+uint64_t Rule::generateNewId(){
+    static uint64_t id_counter = 1;
+    return id_counter++;
+}
+
 unsigned char Rule::getDeviceNumber(){
-	return this->devnum;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	unsigned char dn = this->devnum;
+	return dn;
 }
 
 uint16_t Rule::getBusNumber(){
-	return this->busnum;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	uint16_t bn = this->busnum;
+	return bn;
 }
 
 usbpacket::Direction Rule::getDirection(){
-	return this->direction;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	usbpacket::Direction direction = this->direction;
+	return direction;
 }
 
 uint64_t Rule::getTransferedData(){
-	return this->transfered_data;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	uint64_t transfered_data = this->transfered_data;
+	return transfered_data;
 }
 
 uint64_t Rule::getDataTransferLimit(){
-	return this->data_limit;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	uint64_t data_limit = this->data_limit;
+	return data_limit;
 }
 
 void Rule::setDeviceNumber(unsigned char num){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->devnum = num;
 }
 
 void Rule::setBusNumber(uint16_t num){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->busnum = num;
 }
 
 void Rule::setDirection(usbpacket::Direction direction){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->direction = direction;
 }
 
 void Rule::setDataTransferLimit(uint64_t limit){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->data_limit = limit;
 }
 
 uint64_t Rule::getID(){
-	return this->id;
+	std::unique_lock<std::mutex> lck (this->mtx);
+	uint64_t id = this->id;
+	return id;
 }
 
 void Rule::addTransferedData(uint64_t add){
+	std::unique_lock<std::mutex> lck (this->mtx);
 	this->transfered_data += add;
 }

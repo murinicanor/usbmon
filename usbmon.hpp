@@ -17,8 +17,12 @@ namespace usbmonitor{
 #define MON_IOCX_GETX	 _IOW(MON_IOC_MAGIC, 10, usbpacket::usbmon_get)
 #define MON_IOCG_STATS   _IOR(MON_IOC_MAGIC, 3, usbpacket::mon_bin_stats)
 
-class Rule
-{
+enum CallBackMessage{
+	BROKEN_RULE, THREAD_FAILS, OVERFLOW_COUNTER
+};
+
+class Rule{
+
 public:
 	Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction, uint64_t data_limit);
 
@@ -39,20 +43,24 @@ public:
 	~Rule();
 
 private:
+	std::mutex mtx;
+
 	uint64_t id;
 	unsigned char devnum;
 	uint16_t busnum;
 	usbpacket::Direction direction;
 	uint64_t transfered_data;
 	uint64_t data_limit;
+
+	uint64_t generateNewId();
 	
 };
 
 
-class Usbmon
-{
+class Usbmon{
+
 public:
-	Usbmon();
+	Usbmon(void (*callback)(CallBackMessage, std::shared_ptr<usbmonitor::Rule>));
 
 	int UsbmonInit(std::string usbmon_file_path);
 
@@ -79,6 +87,9 @@ public:
 	~Usbmon();
 
 private:
+
+	void (*callback)(CallBackMessage, std::shared_ptr<usbmonitor::Rule>);
+
 	std::mutex mtx;
 	std::thread *monitorThread;
 	std::list<std::shared_ptr<Rule>> * rules;
