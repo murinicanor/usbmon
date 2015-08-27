@@ -100,6 +100,9 @@ public:
 
 	int getNumOfRules();
 
+	bool isPrintSet();
+	void setPrint(bool set);
+
 	~Usbmon();
 
 private:
@@ -113,6 +116,7 @@ private:
 	std::string usbmon_file_path;
 	int usbmon_fd;
 	bool loopstate;
+	bool print;
 
 	std::shared_ptr<Rule> * getRule(uint64_t rule_id);
 	void applyRules(usbpacket::UsbPacket * packet);

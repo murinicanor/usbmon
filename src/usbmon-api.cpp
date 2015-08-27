@@ -34,21 +34,21 @@ int main(int argc, char const *argv[]){
 	usbmon->UsbmonInit("/dev/usbmon0");
 	usbmon->monitorLoop();
 
+	usbmon->setPrint(true);
+
 	uint64_t first = usbmon->addRule(1,10, usbpacket::BOTH, 100);
-	//uint64_t second = usbmon->addRule(1,9, usbpacket::IN, 1000);
+	uint64_t second = usbmon->addRule(1,9, usbpacket::IN, 1000);
 
-	std::cout << usbmon->getNumOfRules() << std::endl;
-
-	//usbmon->removeRule(first);
-	//usbmon->removeRule(second);
-
-	std::cout << usbmon->getNumOfRules() << std::endl;
+	std::cout << "Number of rules = " << usbmon->getNumOfRules() << std::endl;
 
 	char c = ' ';
 	while(c != 'q'){
 		std::cin >> c;
 		usbmon->setLoopState(false);
 	}
+
+	usbmon->removeRule(first);
+	usbmon->removeRule(second);
 
 	usbmon->waitThread();
 

@@ -34,6 +34,7 @@ Usbmon::Usbmon (void (*callback)(CallBackMessage, std::shared_ptr<usbmonitor::Ru
 	std::unique_lock<std::mutex> lck (this->mtx);
 	this->usbmon_fd = -1;
 	this->loopstate = false;
+	this->print = false;
 	this->rules = new std::list<std::shared_ptr<Rule>>();
 	this->monitorThread = NULL;
 	this->callback = callback;
@@ -102,7 +103,8 @@ int Usbmon::loop(){
 			goto failure;
 		}
 
-		//packet.printUsbPacket();
+		if(this->isPrintSet())packet.printUsbPacket();
+
 		this->applyRules(&packet);
 		this->checkRules();
 	}
@@ -248,6 +250,17 @@ std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){       //use this func
 		}
 	}
 	return rule;
+}
+
+bool Usbmon::isPrintSet(){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	bool state = this->print;
+	return state;
+}
+
+void Usbmon::setPrint(bool set){
+	std::unique_lock<std::mutex> lck (this->mtx);
+	this->print = set;
 }
 
 /*****************************************************************************/
