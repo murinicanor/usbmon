@@ -51,8 +51,6 @@ private:
 	usbpacket::Direction direction;
 	uint64_t transfered_data;
 	uint64_t data_limit;
-
-	uint64_t generateNewId();
 	
 };
 

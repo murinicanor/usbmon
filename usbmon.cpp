@@ -242,17 +242,13 @@ Rule::Rule(uint16_t busnum, unsigned char devnum, usbpacket::Direction direction
 	this->data_limit = data_limit;
 	this->transfered_data = 0;
 
-	this->id = generateNewId();
+	static uint64_t id_counter = 1;
+	this->id = id_counter++;
 
 }
 
 Rule::~Rule(){
 
-}
-
-uint64_t Rule::generateNewId(){
-    static uint64_t id_counter = 1;
-    return id_counter++;
 }
 
 unsigned char Rule::getDeviceNumber(){
