@@ -1,14 +1,22 @@
+UsbMonitor
 
-USBMON
-------
+------------------------------------------------------------------
 
 A simple tool to trace linux USB activity, using /dev/usbmon0.
 
 By default it dumps all USB traffic.  Use options:
 
+./usbmondump
+
  -b###  dump only bus ###
  -d###  dump only device ###
  -x###  exclude device ### from dump
+
+Usbmon C++ API:
+
+Simple example how to use it is usbmon-api.cpp and binary usbmonapi.
+
+./usbmonapi does not have any parameters.  
 
 If you don't have /dev/usbmon0 you probably need to load the driver:
 % sudo modprobe usbmon

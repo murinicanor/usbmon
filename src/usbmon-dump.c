@@ -1,4 +1,4 @@
-/* usbmon.c
+/* usbmon-dump.c based on usbmon.c
  *
  * Copyright 2011 Brian Swetland <swetland@frotz.net>
  * Copyright 2015 Radovan Sroka <rsroka@redhat.com> 
