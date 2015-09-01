@@ -23,13 +23,13 @@
 using namespace usbpacket;
 
 UsbPacket::UsbPacket(){
-	this->header = NULL;
-	this->data = NULL;
+	this->header = nullptr;
+	this->data = nullptr;
 }
 
 int UsbPacket::parseUsbPacket(usbmon_get * get){
 	
-	if(get == NULL || get->hdr == NULL || get->data == NULL){
+	if(get == nullptr || get->hdr == nullptr || get->data == nullptr){
 		std::cerr << "UsbPacket::parseUsbPacket(usbmon_get * get) parameter is null\n";
 		return EXIT_FAILURE;
 	}

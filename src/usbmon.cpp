@@ -36,7 +36,7 @@ Usbmon::Usbmon (void (*callback)(CallBackMessage, std::shared_ptr<usbmonitor::Ru
 	this->loopstate = false;
 	this->print = false;
 	this->rules = new std::list<std::shared_ptr<Rule>>();
-	this->monitorThread = NULL;
+	this->monitorThread = nullptr;
 	this->callback = callback;
 }
 
@@ -50,7 +50,7 @@ int Usbmon::UsbmonInit(std::string usbmon_file_path){
 }
 
 Usbmon::~Usbmon () {
-	if(this->monitorThread != NULL)delete this->monitorThread;
+	if(this->monitorThread != nullptr)delete this->monitorThread;
 	if(this->usbmon_fd > 0)close(this->usbmon_fd);
 	delete rules;
 }
@@ -60,7 +60,7 @@ void Usbmon::monitorLoop(){
 }
 
 void Usbmon::waitThread(){
-	if(this->monitorThread != NULL)
+	if(this->monitorThread != nullptr)
 		this->monitorThread->join();
 }
 
@@ -111,7 +111,7 @@ int Usbmon::loop(){
 	return EXIT_SUCCESS;
 
 failure:
-	this->callback(THREAD_FAILS, NULL);
+	this->callback(THREAD_FAILS, nullptr);
 	return EXIT_FAILURE;
 
 
@@ -120,7 +120,7 @@ failure:
 
 void Usbmon::applyRules(usbpacket::UsbPacket * packet){	
 	std::unique_lock<std::mutex> lck (this->mtx);
-	if(packet == NULL)return; 
+	if(packet == nullptr)return; 
 
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(it->get()->getBusNumber() != packet->getBusNumber())continue;
@@ -171,10 +171,10 @@ uint64_t Usbmon::addRule(uint16_t busnum, unsigned char devnum, usbpacket::Direc
 
 int Usbmon::removeRule(uint64_t rule_id){
 	std::unique_lock<std::mutex> lck (this->mtx);
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	rule = this->getRule(rule_id);
 	
-	if(rule != NULL){		
+	if(rule != nullptr){		
 		this->rules->remove(*rule);
 		return EXIT_SUCCESS;
 	}
@@ -183,10 +183,10 @@ int Usbmon::removeRule(uint64_t rule_id){
 
 int Usbmon::modifyRuleBusnum(uint64_t rule_id, uint16_t busnum){
 	std::unique_lock<std::mutex> lck (this->mtx);
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	rule = this->getRule(rule_id);
 
-	if(rule != NULL){		
+	if(rule != nullptr){		
 		rule->get()->setBusNumber(busnum);
 		return EXIT_SUCCESS;
 	}
@@ -195,10 +195,10 @@ int Usbmon::modifyRuleBusnum(uint64_t rule_id, uint16_t busnum){
 
 int Usbmon::modifyRuleDevnum(uint64_t rule_id, unsigned char devnum){
 	std::unique_lock<std::mutex> lck (this->mtx);
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	rule = this->getRule(rule_id);
 
-	if(rule != NULL){		
+	if(rule != nullptr){		
 		rule->get()->setDeviceNumber(devnum);
 		return EXIT_SUCCESS;
 	}
@@ -207,10 +207,10 @@ int Usbmon::modifyRuleDevnum(uint64_t rule_id, unsigned char devnum){
 
 int Usbmon::modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction){
 	std::unique_lock<std::mutex> lck (this->mtx);
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	rule = this->getRule(rule_id);
 
-	if(rule != NULL){		
+	if(rule != nullptr){		
 		rule->get()->setDirection(direction);
 		return EXIT_SUCCESS;
 	}
@@ -219,10 +219,10 @@ int Usbmon::modifyRuleDirection(uint64_t rule_id, usbpacket::Direction direction
 
 int Usbmon::modifyRuleDataLimit(uint64_t rule_id, uint64_t data_limit){
 	std::unique_lock<std::mutex> lck (this->mtx);
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	rule = this->getRule(rule_id);
 
-	if(rule != NULL){		
+	if(rule != nullptr){		
 		rule->get()->setDataTransferLimit(data_limit);
 		return EXIT_SUCCESS;
 	}
@@ -242,7 +242,7 @@ int Usbmon::getNumOfRules(){
 
 
 std::shared_ptr<Rule> * Usbmon::getRule(uint64_t rule_id){       //use this function only inside mutex locked block (this->mtx)
-	std::shared_ptr<Rule> * rule = NULL;
+	std::shared_ptr<Rule> * rule = nullptr;
 	for (std::list<std::shared_ptr<Rule>>::iterator it=this->rules->begin(); it != this->rules->end(); it++){
 		if(rule_id == it->get()->getID()){
 			rule = &(*it);
