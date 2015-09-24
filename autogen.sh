@@ -21,3 +21,4 @@
 set -x -e
 
 autoreconf -i -s
+doxygen dox
