@@ -74,20 +74,75 @@ enum Direction{
 class UsbPacket{
 
 public:
+	/**
+	 * UsbPacket Constructor
+	 */
 	UsbPacket();
 
+	/**
+	 * Parse USB Packet
+	 *
+	 * @param get Structure to parse
+	 */
 	int parseUsbPacket(usbmon_get * get);
 
+	/**
+	 * Data getter
+	 *
+	 * @return Pointer to the array
+	 */
 	char * getData();
+
+	/**
+	 * Get Data Buffer Size
+	 *
+	 * @return Returns size of buffer
+	 */
 	size_t getDataBufferSize();
+
+	/**
+	 * Get Data Length
+	 *
+	 * @return Returns length of data
+	 */
 	uint32_t getDataLength();
+
+	/**
+	 * Get Device Number
+	 *
+	 * @return Returns Device Number
+	 */
 	unsigned char getDeviceNumber();
+
+	/**
+	 * Get Bus Number
+	 *
+	 * @return Returns Bus Number of USB device
+	 */
 	uint16_t getBusNumber();
+
+	/**
+	 * Get Direction of Packet
+	 * 
+	 * @return Returns Direction of packet
+	 */
 	Direction getDirection();
+
+	/**
+	 * Get Header of packet
+	 *
+	 * @return Returns pointer to header of packet
+	 */
 	usbmon_packet * getHeader();
 
+	/**
+	 * Print USB Packet
+	 */
 	void printUsbPacket();
 
+	/**
+	 * UsbPacket Destructor
+	 */
 	~UsbPacket();
 
 private:
