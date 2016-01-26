@@ -220,8 +220,19 @@ public:
 	 */
 	bool getLoopState();
 
-	//void setFileDescriptor(int fd);
-	//int getFileDescriptor();
+	/**
+	 * File descriptor getter
+	 *
+	 * @return Returns File descriptor
+	 */
+	void setFileDescriptor(int fd);
+	
+	/**
+	 * File descriptor setter
+	 *
+	 * @param fd File Descriptor to set
+	 */
+	int getFileDescriptor();
 
 	/**
 	 * Add new Rule into Usbmon
